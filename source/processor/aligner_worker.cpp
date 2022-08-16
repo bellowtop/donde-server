@@ -12,10 +12,13 @@
 #include "utils.h"
 
 #include <cassert>
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <opencv2/core/cvdef.h>
 #include <opencv2/core/types.hpp>
+#include <opencv2/imgproc.hpp>
 #include <string>
 #include <vector>
 
@@ -80,14 +83,36 @@ RetCode AlignerWorker::process(const LandmarksResult& landmarks_result, AlignerR
         return RetCode::RET_ERR;
     }
 
-    for (size_t i = 0; i < landmarks_result.faces.size(); i ++ ) {
-        cv::Mat aligned = align_face(landmarks_result.faces.at(i), landmarks_result.face_landmarks.at(i));
+    for (size_t i = 0; i < landmarks_result.faces.size(); i++) {
+        cv::Mat aligned
+            = align_face(landmarks_result.faces.at(i), landmarks_result.face_landmarks.at(i));
         result.aligned_faces.push_back(aligned);
     }
 
     return RetCode::RET_OK;
 }
 
-cv::Mat AlignerWorker::align_face(const cv::Mat& face_image, const std::vector<cv::Point2f>& landmarks) {
+cv::Mat AlignerWorker::align_face(const cv::Mat& face_image,
+                                  const std::vector<cv::Point2f>& landmarks) {
+    // left eye: landmarks[0],  landmarks[1],
+    // right eye: landmarks[2],  landmarks[3],
 
+    cv::Point2f left_eye_center
+        = {(landmarks[0].x + landmarks[1].x) / 2, (landmarks[0].y + landmarks[1].y) / 2};
+    cv::Point2f right_eye_center
+        = {(landmarks[2].x + landmarks[3].x) / 2, (landmarks[2].y + landmarks[3].y) / 2};
+
+    cv::Point2f center = {(left_eye_center.x + right_eye_center.x) / 2,
+                          (left_eye_center.y + right_eye_center.y) / 2};
+
+    double dx = (right_eye_center.x - left_eye_center.x);
+    double dy = (right_eye_center.y - left_eye_center.y);
+    double angle = atan2(dy, dx) * 180 / CV_PI;
+
+    cv::Mat rot_mat = cv::getRotationMatrix2D(center, angle, 1.0f);
+    cv::Mat warped;
+
+    cv::warpAffine(face_image, warped, rot_mat, warped.size());
+
+    return warped;
 }
