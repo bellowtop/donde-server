@@ -24,7 +24,10 @@ if(APPLE)
   set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}, "/usr/local/runtime/cmake")
   find_package(OpenVINO REQUIRED COMPONENTS Runtime)
 elseif(UNIX AND NOT APPLE)
-  set(OpenVINO_DIR "/opt/l_openvino_toolkit_ubuntu20_2022.2.0.7713.af16ea1d79a_x86_64/runtime/cmake")
+  # set(OpenVINO_DIR "/opt/l_openvino_toolkit_ubuntu20_2022.2.0.7713.af16ea1d79a_x86_64/runtime/cmake")
+  # arm64
+  set(OpenVINO_DIR "/opt/l_openvino_toolkit_debian9_2022.3.0.9052.9752fafe8eb_arm64/runtime/cmake")
+  find_package(OpenVINO REQUIRED COMPONENTS Runtime)
 endif()
 
 
