@@ -90,6 +90,12 @@ export CC=/usr/local/opt/llvm/bin/clang ; export CXX=/usr/local/opt/llvm/bin/cla
 conan install --build=missing --profile conan/conanprofile  -if build ./conan
 ```
 
+if prefer local conan:
+```bash
+export CONAN_USER_HOME=`pwd`
+```
+then conan will download packages to `.conan/data`
+
 #### Build server binary
 
 
