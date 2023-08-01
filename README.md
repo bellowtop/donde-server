@@ -1,27 +1,25 @@
 # Donde server
 
-It's a group project, consist of different services, such as face feature extraction and searching and clustering service. Built with openvino and faiss[todo] [wip].
+It's a group of different services
 
-Currently developed with macOS, llvm-clang
+* image feature extraction
+* feature searching & clustering
+* video processing
+
+Built on top of [donde-toolkits](https://github.com/sekirocc/donde-toolkits)
 
 
 ## Features
 
-- [Modern CMake practices](https://pabloariasal.github.io/2018/02/19/its-time-to-do-cmake-right/)
 - Openvino inference
 - Full pipeline detect/landmarks/align/extract
-- Feature search service with simple store
-- Feature searching with faiss
-- Feature clustering with faiss
-- Master/Workers architecture, Poco messaging
 - Conan to manage dependencies
 - Protobuf proto & GRPC server
-- GRPC gateway to provide http api
-- Fine tests (important!)
+- GRPC & GRPC gateway integrated
 
 ## Dependencies
 
-openvino, you need to install(download from openvino website) it first. other depencencies are managed by `conan/conanfile.txt`.
+For the big ones: openvino/opencv/ffmpeg, other small depencencies are managed by `conan/conanfile.txt`.
 
 ### Models
 
@@ -36,13 +34,15 @@ openvino, you need to install(download from openvino website) it first. other de
 ## Project layout
 
 
-* `library` contains the main library `FeatureLibraries` for other feature related services, such as extract service, search service. this is the main engine.
+* `proto` contains protobuf definitions for common api, grpc services definitions. servers are typically implementations of these grpc services.
 
-* `proto` contains protobuf definitions for common api, and grpc services definitions. servers are typically implementations of these grpc services.
+* `api` proto files are compiled to api directory.
 
-* `servers` has source codes to build various standalone server binaries. such as `feature_extract` `feature_search` `feature_search_worker`. servers has dependency to library and proto
+* `src` has source codes to build various standalone server binaries.
 
 * `tests` contains tests, they test the `FeatureLibraries` library. tests has dependency to library.
+
+* `contrib` contains json samples, static assets etc.
 
 
 ## Usage
@@ -50,99 +50,55 @@ openvino, you need to install(download from openvino website) it first. other de
 
 ### Build and run
 
-#### Install openvino distribution
+#### Install dependencies
 
-https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/download.html
+macOS
 
 ```
-#double check your openvino install location, modify CMakeLists.txt if needed
+brew install openvino
+brew install ffmpeg
+brew install opencv
+```
 
-set(OpenVINO_DIR "/opt/intel/openvino_2022/runtime/cmake")
+other platform openvino installation guide, please refers to `https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/download.html`
+
+```
 find_package(OpenVINO REQUIRED COMPONENTS Runtime)
-```
-
-activate openvino env
-
-```
-python3.8 -m venv venv3.8
-source venv3.8/bin/activate
-source /opt/intel/openvino_2022/setupvars.sh
-```
-
-
-#### Install llvm clang
-
-The project can be built use llvm clang (version 14), not use apple clang
-
-```
-brew install llvm
-
-/usr/local/opt/llvm/bin/clang --version
-Homebrew clang version 14.0.6
-
-#explict set CC and CXX, for sure
-export CC=/usr/local/opt/llvm/bin/clang ; export CXX=/usr/local/opt/llvm/bin/clang++
 ```
 
 #### Build conan dependency packages
 
-```bash
+```
+mkdir -p build
 conan install --build=missing --profile conan/conanprofile  -if build ./conan
 ```
 
-#### Build server binary
+#### Build
 
 
-```bash
+```
 
-cmake -S server -B build/server
-
-cmake --build build/server
-
-#make sure export some openvino runtime variable path before running.
-#source / opt / intel / openvino_2022 / setupvars.sh
+cmake -B build
+cmake --build build
 
 #run the service
-./build/server/bin/FaceRecognitionServer
+./build/bin/FaceRecognitionServer
 
 #with config path
-./build/server/bin/FaceRecognitionServer --config_path server/examples/server.json
+./build/bin/FaceRecognitionServer --config_path server/examples/server.json
 ```
-
-
-
-### Use Makefile
-
-Makefile wraps `cmake` instructions together.
-
-```
-#prepare all those build dirs
-make build-pre
-
-#build and run server
-make build-server
-make run-server
-
-#build and run test
-make build-test
-make run-test
-
-#build lib only
-make build-lib
-```
-
 
 
 
 ### Build proto
 
 ```
-cd server/protos
+cd proto
 
 #build protobuf definitions of grpc and service
 ./build_proto.sh
 
-#build grpc - gateway, for rest - api[optional]
+#build grpc - http gateway, for http api[optional]
 ./build_gateway.sh
 
 ```
@@ -160,7 +116,7 @@ then use xcode to open `FaceRecognitionServer.xcodeproj`, try build and run.
 
 
 
-### Known Issues
+### FAQ
 Q:
 CMake generate failed with message `xcode-select: error: tool 'xcodebuild' requires Xcode, but active developer directory '/Library/Developer/CommandLineTools' is a command line tools instance`
 

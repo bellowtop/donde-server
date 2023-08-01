@@ -1,3 +1,12 @@
+## Update 2023/07/22
+
+openvino now has official support for mac M1, so just install it with brew.
+
+```
+brew install openvino
+```
+
+
 ## How to build openvino with apple M1
 
 openvino arm plugin build need SCons
