@@ -6,7 +6,6 @@
 #include "Poco/Timestamp.h"
 #include "config.h"
 #include "face_service.h"
-#include "openvino/openvino.hpp"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
@@ -47,10 +46,8 @@ auto main(int argc, char** argv) -> int {
   options.add_options()
       ("help", "Show help")
       ("version", "Print the current version number")
-      ("config_path", "config filepath", cxxopts::value<std::string>()->default_value("../../../contrib/face_extract_server.json"));
+      ("config_path", "config filepath", cxxopts::value<std::string>()->default_value("../../contrib/face_extract_server.json"));
     // clang-format on
-
-    std::cout << "openvino version: " << ov::get_openvino_version() << std::endl;
 
     auto opts = options.parse(argc, argv);
 

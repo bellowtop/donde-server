@@ -1,11 +1,7 @@
 #pragma once
 
-#include "Poco/Format.h"
-#include "Poco/Logger.h"
-#include "Poco/Timestamp.h"
 #include "config.h"
 #include "donde/feature_extract/face_pipeline.h"
-#include "donde/feature_extract/face_pipeline_impl.h"
 #include "feature_extract.grpc.pb.h"
 #include "feature_extract.pb.h"
 
@@ -19,7 +15,8 @@
 #include <iostream>
 
 using namespace std;
-using namespace donde_toolkits;
+
+using donde_toolkits::feature_extract::FacePipeline;
 
 using com::sekirocc::feature_extract::CompareRequest;
 using com::sekirocc::feature_extract::CompareResponse;
@@ -53,5 +50,5 @@ class FaceServiceImpl final : public FaceService::Service {
     Config& config;
     // spdlog::Logger& logger;
     std::string device_id;
-    donde_toolkits::feature_extract::FacePipelineImpl pipeline;
+    FacePipeline pipeline;
 };

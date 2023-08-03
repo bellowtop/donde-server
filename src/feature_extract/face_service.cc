@@ -1,17 +1,12 @@
 #include "face_service.h"
 
-#include "Poco/Format.h"
-#include "Poco/Timestamp.h"
 #include "common.pb.h"
 #include "config.h"
 #include "donde/definitions.h"
-#include "donde/feature_extract/concurrent_processor_impl.h"
-#include "donde/feature_extract/worker_openvino_impl.h"
+#include "donde/feature_extract/processor_factory.h"
 #include "donde/utils.h"
 #include "feature_extract.grpc.pb.h"
 #include "feature_extract.pb.h"
-#include "nlohmann/json.hpp"
-#include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
 #include <algorithm>
@@ -55,11 +50,8 @@ using grpc::StatusCode;
 
 using json = nlohmann::json;
 
-using donde_toolkits::feature_extract::ConcurrentProcessorImpl;
-using donde_toolkits::feature_extract::openvino_worker::AlignerWorker;
-using donde_toolkits::feature_extract::openvino_worker::DetectorWorker;
-using donde_toolkits::feature_extract::openvino_worker::FeatureWorker;
-using donde_toolkits::feature_extract::openvino_worker::LandmarksWorker;
+namespace dd = donde_toolkits;
+using dd::feature_extract::ProcessorFactory;
 
 FaceServiceImpl::FaceServiceImpl(Config& server_config)
     : config(server_config),
@@ -70,11 +62,10 @@ FaceServiceImpl::~FaceServiceImpl(){};
 
 void FaceServiceImpl::Start() {
     // pipeline is responsible to release
-    auto detector = new ConcurrentProcessorImpl<DetectorWorker>();
-    auto landmarks = new ConcurrentProcessorImpl<LandmarksWorker>();
-    auto aligner = new ConcurrentProcessorImpl<AlignerWorker>();
-    auto feature = new ConcurrentProcessorImpl<FeatureWorker>();
-
+    auto detector = ProcessorFactory::createDetector();
+    auto landmarks = ProcessorFactory::createLandmarks();
+    auto aligner = ProcessorFactory::createAligner();
+    auto feature = ProcessorFactory::createFeature();
     pipeline.Init(detector, landmarks, aligner, feature);
 }
 
@@ -90,8 +81,8 @@ Status FaceServiceImpl::Detect(ServerContext* context, const DetectionRequest* r
     const std::vector<uint8_t> image_char_vec(image_data.begin(), image_data.end());
 
     // auto release.
-    std::shared_ptr<donde_toolkits::Frame> frame = pipeline.Decode(image_char_vec);
-    std::shared_ptr<donde_toolkits::DetectResult> result = pipeline.Detect(frame);
+    std::shared_ptr<dd::Frame> frame = pipeline.Decode(image_char_vec);
+    std::shared_ptr<dd::DetectResult> result = pipeline.Detect(frame);
 
     response->set_code(ResultCode::OK);
 
@@ -144,14 +135,11 @@ Status FaceServiceImpl::ExtractFeature(ServerContext* context, const ExtractionR
     const std::vector<uint8_t> image_char_vec(image_data.begin(), image_data.end());
 
     // auto release.
-    std::shared_ptr<donde_toolkits::Frame> frame = pipeline.Decode(image_char_vec);
-    std::shared_ptr<donde_toolkits::DetectResult> detect_result = pipeline.Detect(frame);
-    std::shared_ptr<donde_toolkits::LandmarksResult> landmarks_result
-        = pipeline.Landmarks(detect_result);
-    std::shared_ptr<donde_toolkits::AlignerResult> aligner_result
-        = pipeline.Align(landmarks_result);
-    std::shared_ptr<donde_toolkits::FeatureResult> feature_result
-        = pipeline.Extract(aligner_result);
+    std::shared_ptr<dd::Frame> frame = pipeline.Decode(image_char_vec);
+    std::shared_ptr<dd::DetectResult> detect_result = pipeline.Detect(frame);
+    std::shared_ptr<dd::LandmarksResult> landmarks_result = pipeline.Landmarks(detect_result);
+    std::shared_ptr<dd::AlignerResult> aligner_result = pipeline.Align(landmarks_result);
+    std::shared_ptr<dd::FeatureResult> feature_result = pipeline.Extract(aligner_result);
 
     if (detect_result->faces.size() != feature_result->face_features.size()) {
         return Status(StatusCode::INTERNAL, "internal error",
@@ -200,10 +188,10 @@ Status FaceServiceImpl::CompareFeature(ServerContext* context, const CompareRequ
     const std::string& one_blob = one.blob();
     const std::string& two_blob = two.blob();
 
-    donde_toolkits::Feature ft1(donde_toolkits::convertFeatureBlobToFloats(one_blob),
-                                std::string(one.model()), one.version());
-    donde_toolkits::Feature ft2(donde_toolkits::convertFeatureBlobToFloats(two_blob),
-                                std::string(two.model()), two.version());
+    dd::Feature ft1(dd::convertFeatureBlobToFloats(one_blob), std::string(one.model()),
+                    one.version());
+    dd::Feature ft2(dd::convertFeatureBlobToFloats(two_blob), std::string(two.model()),
+                    two.version());
 
     if (ft1.raw.size() != ft2.raw.size()) {
         return Status(StatusCode::INVALID_ARGUMENT, "invalid request feature",
