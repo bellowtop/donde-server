@@ -5,7 +5,6 @@
 #include "common.pb.h"
 #include "config.h"
 #include "donde/feature_search/definitions.h"
-#include "donde/feature_search/search_manager/shard_manager.h"
 #include "donde/utils.h"
 #include "feature_search.grpc.pb.h"
 #include "feature_search.pb.h"

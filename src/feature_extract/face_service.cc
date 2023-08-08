@@ -38,7 +38,7 @@ using com::sekirocc::feature_extract::CompareResponse;
 
 using com::sekirocc::feature_extract::FaceService;
 
-using com::sekirocc::common::Rect;
+using CommonRect = com::sekirocc::common::Rect;
 using com::sekirocc::common::ResultCode;
 
 using com::sekirocc::common::FaceFeature;
@@ -92,7 +92,7 @@ Status FaceServiceImpl::Detect(ServerContext* context, const DetectionRequest* r
         face_rect->set_quality(1.0f); // TODO quality unimplemented
         face_rect->set_confidence(detected_face.confidence);
 
-        Rect* rect = face_rect->mutable_rectangle();
+        CommonRect* rect = face_rect->mutable_rectangle();
         rect->mutable_point()->set_x(detected_face.box.x);
         rect->mutable_point()->set_y(detected_face.box.y);
         rect->mutable_size()->set_width(detected_face.box.width);
@@ -152,7 +152,7 @@ Status FaceServiceImpl::ExtractFeature(ServerContext* context, const ExtractionR
         face_rect->set_quality(1.0f); // TODO quality unimplemented
         face_rect->set_confidence(detected_face.confidence);
 
-        Rect* rect = face_rect->mutable_rectangle();
+        CommonRect* rect = face_rect->mutable_rectangle();
         rect->mutable_point()->set_x(detected_face.box.x);
         rect->mutable_point()->set_y(detected_face.box.y);
         rect->mutable_size()->set_width(detected_face.box.width);

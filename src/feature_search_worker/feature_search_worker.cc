@@ -49,6 +49,7 @@ using com::sekirocc::common::FaceFeature;
 using com::sekirocc::common::ResultCode;
 
 using donde_toolkits::feature_search::DBShard;
+using donde_toolkits::feature_search::search_worker::BruteForceWorker;
 
 using grpc::ServerContext;
 using grpc::Status;
@@ -58,7 +59,7 @@ using json = nlohmann::json;
 FeatureSearchWorkerImpl::FeatureSearchWorkerImpl(Config& server_config) : config(server_config) {
     driver = std::make_shared<donde_toolkits::feature_search::SimpleDriver>(
         server_config.get_searcher_config()["filepath"]);
-    // searcher = std::make_shared<search::BruteForceSearcher>(*driver);
+    worker = std::make_shared<BruteForceWorker>(*driver);
 };
 
 FeatureSearchWorkerImpl::~FeatureSearchWorkerImpl(){};

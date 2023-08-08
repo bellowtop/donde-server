@@ -5,7 +5,6 @@
 #include "Poco/Timestamp.h"
 #include "config.h"
 #include "donde/feature_search/search_manager/coordinator.h"
-#include "donde/feature_search/search_manager/worker.h"
 #include "feature_search.grpc.pb.h"
 
 // #include "spdlog/spdlog.h"

@@ -71,7 +71,7 @@ class FeatureSearchWorkerImpl final : public FeatureSearchWorker::Service {
     std::vector<std::string> managed_dbs;
 
     Config& config;
-    std::shared_ptr<donde_toolkits::feature_search::search_worker::SearchWorker> worker;
+    std::shared_ptr<donde_toolkits::feature_search::search_worker::ISearchWorker> worker;
     std::shared_ptr<donde_toolkits::feature_search::Driver> driver;
     // spdlog::Logger& logger;
 };
