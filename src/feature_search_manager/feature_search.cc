@@ -5,6 +5,7 @@
 #include "common.pb.h"
 #include "config.h"
 #include "donde/feature_search/definitions.h"
+#include "donde/feature_search/search_manager/coordinator.h"
 #include "donde/utils.h"
 #include "feature_search.grpc.pb.h"
 #include "feature_search.pb.h"
@@ -46,13 +47,20 @@ using com::sekirocc::common::ResultCode;
 using grpc::ServerContext;
 using grpc::Status;
 
+using donde_toolkits::feature_search::search_manager::Coordinator;
+
 using json = nlohmann::json;
 
-FeatureSearchManagerImpl::FeatureSearchManagerImpl(Config& server_config) : config(server_config){};
+FeatureSearchManagerImpl::FeatureSearchManagerImpl(Config& server_config)
+    : config(server_config),
+      coordinator(std::make_shared<Coordinator>(server_config.get_search_manager_config())){};
 
 FeatureSearchManagerImpl::~FeatureSearchManagerImpl(){};
 
-void FeatureSearchManagerImpl::Start() { coordinator->Start(); };
+void FeatureSearchManagerImpl::Start() {
+    coordinator->Start();
+    coordinator->ProbeWorkers(_worker_factory);
+};
 
 void FeatureSearchManagerImpl::Stop() { coordinator->Stop(); };
 

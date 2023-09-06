@@ -5,7 +5,7 @@
 #include "Poco/Thread.h"
 #include "Poco/Timestamp.h"
 #include "config.h"
-#include "openvino/openvino.hpp"
+#include "feature_search.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
@@ -23,7 +23,7 @@
 using namespace std;
 
 auto main(int argc, char** argv) -> int {
-    cxxopts::Options options(*argv, "A program to welcome the world!");
+    cxxopts::Options options(*argv, "feature search manager service");
 
     std::string language;
     std::string name;
@@ -34,8 +34,6 @@ auto main(int argc, char** argv) -> int {
       ("version", "Print the current version number")
       ("config_path", "config filepath", cxxopts::value<std::string>()->default_value("../../contrib/server.json"));
     // clang-format on
-
-    std::cout << "openvino version: " << ov::get_openvino_version() << std::endl;
 
     auto opts = options.parse(argc, argv);
 
@@ -58,6 +56,28 @@ auto main(int argc, char** argv) -> int {
         auto console_log = spdlog::stdout_color_mt("main");
         console_log->set_level(spdlog::level::trace);
         spdlog::set_default_logger(console_log);
+
+        FeatureSearchManagerImpl service(config);
+        service.Start();
+        spdlog::info("create and started FeatureSearchManagerImpl...");
+
+        std::string server_address("0.0.0.0:9696");
+        grpc::EnableDefaultHealthCheckService(true);
+        grpc::ServerBuilder builder;
+        builder.SetSyncServerOption(grpc::ServerBuilder::SyncServerOption::MIN_POLLERS, 64);
+        builder.SetSyncServerOption(grpc::ServerBuilder::SyncServerOption::MAX_POLLERS, 64);
+        // grpc::ResourceQuota rq;
+        // rq.SetMaxThreads(16);
+        // builder.SetResourceQuota(rq);
+
+        builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+        builder.RegisterService(&service);
+        spdlog::info("register grpc service");
+
+        std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+        spdlog::info("Server listening on {}", server_address);
+
+        server->Wait();
 
     } catch (Poco::Exception& exc) {
         std::cerr << exc.displayText() << std::endl;

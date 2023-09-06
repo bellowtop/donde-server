@@ -42,6 +42,8 @@ using com::sekirocc::feature_search::SearchFeatureResponse;
 using grpc::ServerContext;
 using grpc::Status;
 
+using donde_toolkits::feature_search::search_manager::ICoordinator;
+
 class FeatureSearchManagerImpl final : public FeatureSearchManager::Service {
   public:
     FeatureSearchManagerImpl(Config& server_config);
@@ -75,13 +77,9 @@ class FeatureSearchManagerImpl final : public FeatureSearchManager::Service {
     Config& config;
     // spdlog::Logger& logger;
 
-    std::shared_ptr<donde_toolkits::feature_search::search_manager::Coordinator> coordinator;
+    std::shared_ptr<ICoordinator> coordinator;
 
     std::vector<std::string> db_ids;
-
-    // worker_id => worker
-    std::unordered_map<std::string, donde_toolkits::feature_search::search_manager::Worker*>
-        workers;
 
     // worker_id => db_ids
     std::unordered_map<std::string, std::vector<std::string>> worker_dbs;
