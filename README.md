@@ -69,23 +69,18 @@ find_package(OpenVINO REQUIRED COMPONENTS Runtime)
 #### Build conan dependency packages
 
 ```
-mkdir -p build
-conan install --build=missing --profile conan/conanprofile  -if build ./conan
+mkdir -p generated
+conan install --build=missing  -of generated ./conan
 ```
 
 #### Build
 
-
 ```
+mkdir -p build && cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=../generated/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build .
 
-cmake -B build
-cmake --build build
-
-#run the service
-./build/bin/FaceRecognitionServer
-
-#with config path
-./build/bin/FaceRecognitionServer --config_path server/examples/server.json
+./build/feature_extract --config_path contrib/face_extract_server.json
 ```
 
 
@@ -107,9 +102,8 @@ cd proto
 ## Xcode
 
 ```
-mkdir -p xcode/server
-cd xcode/server
-cmake -G Xcode ../../server
+mkdir -p build && cd build
+cmake -G Xcode -DCMAKE_TOOLCHAIN_FILE=../generated/conan_toolchain.cmake ..
 ```
 
 then use xcode to open `FaceRecognitionServer.xcodeproj`, try build and run.

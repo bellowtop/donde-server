@@ -6,33 +6,82 @@ set(CMAKE_CXX_STANDARD 17)
 project(DondeServer LANGUAGES CXX)
 
 
-if (NOT DEFINED CONAN_ALREADY_SETUP)
-  include(build/conanbuildinfo.cmake)
-  conan_basic_setup(TARGETS)
-  set(CONAN_ALREADY_SETUP true)
-endif()
+
+##
+## Conan
+##
+
+find_package(cxxopts)
+find_package(Poco)
+find_package(gRPC)
+find_package(googleapis)
+find_package(protobuf)
+find_package(libuuid)
+find_package(msgpack)
+find_package(SQLiteCpp)
+find_package(cassandra-cpp-driver)
+find_package(OpenSSL)
+find_package(ZLIB)
+find_package(toml11)
+find_package(nlohmann_json)
+find_package(doctest)
+find_package(GTest)
+find_package(trompeloeil)
+find_package(spdlog)
+
 
 
 set(CONAN_LIBs
-    CONAN_PKG::grpc
-    CONAN_PKG::protobuf
-    CONAN_PKG::fmt
-    CONAN_PKG::poco
-    CONAN_PKG::msgpack
-    CONAN_PKG::sqlitecpp
-    CONAN_PKG::spdlog
-    CONAN_PKG::cxxopts
-    CONAN_PKG::nlohmann_json
-    CONAN_PKG::cassandra-cpp-driver
-    CONAN_PKG::toml11)
+	cxxopts::cxxopts
+	Poco::Poco
+    grpc::grpc
+    googleapis::googleapis
+    protobuf::protobuf
+    libuuid::libuuid
+    msgpack-cxx
+    SQLiteCpp
+    cassandra-cpp-driver::cassandra-cpp-driver
+	openssl::openssl
+	ZLIB::ZLIB
+	toml11::toml11
+	nlohmann_json::nlohmann_json
+	doctest::doctest
+	gtest::gtest
+	trompeloeil::trompeloeil
+	spdlog::spdlog
+)
+
+
+
+
+
+##
+## OpenVINO library
+##
 
 find_package(OpenVINO REQUIRED COMPONENTS Runtime)
 message("OpenVINO_FOUND: ${OpenVINO_FOUND}")
 message("OpenVINO_Runtime_FOUND: ${OpenVINO_Runtime_FOUND}")
-find_package(OpenCV REQUIRED CONFIG)
 
-set(DondeToolkits_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../donde-toolkits/install/cmake)
-find_package(DondeToolkits REQUIRED)
+find_package(OpenCV REQUIRED CONFIG)
+message("OpenCV_LIBS: ${OpenCV_LIBS}")
+
+
+
+
+
+
+
+##
+## Find DondeToolkits
+##
+set(DONDE_TOOLKITS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../donde-toolkits/install/)
+
+set(DONDE_LIBs
+    ${DONDE_TOOLKITS_PATH}/libfeature_extract.a
+    ${DONDE_TOOLKITS_PATH}/libfeature_search.a
+    ${DONDE_TOOLKITS_PATH}/libvideo_process.a
+)
 
 #########################################################
 # api
@@ -51,10 +100,15 @@ target_include_directories(feature_extract
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/feature_extract
     ${CMAKE_CURRENT_SOURCE_DIR}/api
+    ${DONDE_TOOLKITS_PATH}/include
+    ${CMAKE_INCLUDE_PATH}
 )
 target_link_libraries(feature_extract
+	PRIVATE
     ${CONAN_LIBs}
-    donde::DondeToolkits
+	${DONDE_LIBs}
+    ${OpenCV_LIBS}
+	openvino::runtime
 )
 
 
@@ -69,11 +123,16 @@ target_include_directories(feature_search_manager
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/feature_search_manager
     ${CMAKE_CURRENT_SOURCE_DIR}/api
+    ${DONDE_TOOLKITS_PATH}/include
+    ${CMAKE_INCLUDE_PATH}
 )
 
 target_link_libraries(feature_search_manager
+	PRIVATE
     ${CONAN_LIBs}
-    donde::DondeToolkits
+	${DONDE_LIBs}
+    ${OpenCV_LIBS}
+	openvino::runtime
 )
 
 ######################################################
@@ -87,8 +146,13 @@ target_include_directories(feature_search_worker
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/feature_search_worker
     ${CMAKE_CURRENT_SOURCE_DIR}/api
+    ${DONDE_TOOLKITS_PATH}/include
+    ${CMAKE_INCLUDE_PATH}
 )
 target_link_libraries(feature_search_worker
+	PRIVATE
     ${CONAN_LIBs}
-    donde::DondeToolkits
+	${DONDE_LIBs}
+    ${OpenCV_LIBS}
+	openvino::runtime
 )

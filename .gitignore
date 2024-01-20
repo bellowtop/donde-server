@@ -1,3 +1,4 @@
+/generated
 /build
 /build2
 !/build/compile_commands.json
